@@ -13,10 +13,12 @@ class ContaIterador:
     def __next__(self):
         try:
             conta = self.contas[self.contador]
-            self.contador += 1
             return conta
         except IndexError:
             raise StopIteration
+        finally:
+            self.contador += 1
+
 
 class Cliente:
     def __init__(self, endereco):
@@ -192,6 +194,16 @@ class Transacao(ABC):
         pass
 
 
+def log_transacao(funcao):
+    def envelope(*args, **kwargs):
+        resultado = funcao(*args, **kwargs)
+        print(f"{datetime.now()}: {funcao.__name__.upper()}")
+        return resultado
+    
+    return envelope
+
+
+@log_transacao
 class Saque(Transacao):
     def __init__(self, valor):
         self._valor = valor
@@ -207,6 +219,7 @@ class Saque(Transacao):
             conta.historico.adicionar_transacao(self)
 
 
+@log_transacao
 class Deposito(Transacao):
     def __init__(self, valor):
         self._valor = valor
@@ -249,6 +262,7 @@ def recuperar_conta_cliente(cliente):
     return cliente.contas[0]
 
 
+@log_transacao
 def exibir_extrato(clientes):
     cpf = input("Informe o CPF do cliente: ")
     cliente = filtrar_cliente(cpf, clientes)
@@ -271,6 +285,7 @@ def exibir_extrato(clientes):
     conta.historico.gerar_relatorio(opcao_extrato)
 
 
+@log_transacao
 def criar_cliente(clientes):
     cpf = input("Informe o CPF (somente número): ")
     cliente = filtrar_cliente(cpf, clientes)
@@ -290,6 +305,7 @@ def criar_cliente(clientes):
     print("\nCliente registrado com sucesso!")
 
 
+@log_transacao
 def criar_conta(numero_conta, clientes, contas):
     cpf = input("Informe o CPF do cliente: ")
     cliente = filtrar_cliente(cpf, clientes)
